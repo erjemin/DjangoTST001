@@ -81,5 +81,5 @@ def junk_nav ( request, offsetPageNum ) :
         html += "</tr>"
     html += "</table> Время выполнения: %f " % float(time.clock() - tStart)
     html += "</body></html>"
-
+    # вывод
     return HttpResponse ( html )
