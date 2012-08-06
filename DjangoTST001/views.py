@@ -29,11 +29,15 @@ def hours_ahead ( request, offset ) :
            % ( offset, dt )
     return HttpResponse ( html )
 
-def junk_nav ( request, offset ) :
+def junk_nav ( request, offsetPageNum ) :
     tStart = time.clock()
-    random.seed ( offset )
+    try:
+        offsetPageNum = int ( offsetPageNum )
+    except ValueError:
+        raise Http404 ( )
+    random.seed ( offsetPageNum )
     dimX = 30  # число столбцов навигационного массива
-    dimY = 10  # число строк навигационного массива
+    dimY = 15  # число строк навигационного массива
     iNumNavFocus = random.randint(2,6)   # число очагов навигации
     iMaxRadiusFocus = 12     # предельный разбег фокуса навигации
     iMinRadiusFocus = 5     # минимальный разбег фокуса навигации
@@ -71,12 +75,11 @@ def junk_nav ( request, offset ) :
         html += "<tr>"
         for CountX in range( dimX ) :
             html += "<td bgcolor='#"
-            html += "00%02xff" % int((dim[CountX][CountY][0]*255.)/300)
+            html += "99%02x99" % int((dim[CountX][CountY][0]*255.)/(dimX*dimY))
             html += "'><a href='/nav/%03d/'" % dim[CountX][CountY][0]
             html += ">%03d</a></td>" % dim[CountX][CountY][0]
         html += "</tr>"
-    tEnd =  time.clock()
-    html += "</table> Время выполнения: %f " % float(tEnd - tStart)
+    html += "</table> Время выполнения: %f " % float(time.clock() - tStart)
     html += "</body></html>"
 
     return HttpResponse ( html )

@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     ( r'^hello/$', hello ),
     ( r'^time/$', funMainHomePage ),
     ( r'^time/plus/(\d{1,2})/$', hours_ahead ),
-    ( r'^nav/(\d{1,4})/$', junk_nav ),
+    ( r'^nav/(\d{1,6})/$', junk_nav ),
     # Пример:
     # url(r'^$', 'DjangoTST001.views.home', name='home'),
     # url(r'^DjangoTST001/', include('DjangoTST001.foo.urls')),
