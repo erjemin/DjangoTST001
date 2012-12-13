@@ -38,7 +38,8 @@ def junk_nav ( request, offsetPageNum ) :
     random.seed ( offsetPageNum )
     dimX = 30  # число столбцов навигационного массива
     dimY = 15  # число строк навигационного массива
-    iNumNavFocus = random.randint(2,6)   # число очагов навигации
+    iCountDown = dimX * dimY   # емкость создаваемого массива (после исползуется как впомогательная)
+    iNumNavFocus = random.randint (2, int ( iCountDown / 80. ) )   # число очагов навигации
     iMaxRadiusFocus = 12     # предельный разбег фокуса навигации
     iMinRadiusFocus = 5     # минимальный разбег фокуса навигации
     # инициализируем массив размерностью dimX на dimY и глубиной 2
@@ -48,15 +49,15 @@ def junk_nav ( request, offsetPageNum ) :
                 for countX in range(dimX)]
 
     # начинаем заполнять навигационный массив
-    iCountDown = dimX * dimY
+    lstFocusInfo =  [] # создает вспомогательный лист с даными о рзмерах уздлв фокуса
     for CountFocus in range ( iNumNavFocus ) :
         # перебираем по циклу очаги навигации
         iRadiusFocus = random.randint(iMinRadiusFocus, iMaxRadiusFocus )
         iCurentCenterFocusX = random.randint(1,dimX-2)
         iCurentCenterFocusY = random.randint(1,dimY-2)
         dim[iCurentCenterFocusX][iCurentCenterFocusY][0] = iCountDown
+        dim[iCurentCenterFocusX][iCurentCenterFocusY][1] = iNumNavFocus
         iCountDown -= 1
-        iCurentFocusSquare = 1
         for CountRadius in range (1, iRadiusFocus ) :
             iCurentFocusSquare = CountRadius * CountRadius
             for CountTmpFocus in range ( 1, iCurentFocusSquare*2 ) :
@@ -68,6 +69,10 @@ def junk_nav ( request, offsetPageNum ) :
                 if dim[iTmp0X][iTmp0Y][0] == 0 :
                     dim[iTmp0X][iTmp0Y][0] = iCountDown
                     iCountDown -= 1
+        lstFocusInfo.append ( dimX * dimY - iCountDown ) # дописываем во вспомогательный лист промежуточный размер текущего узла фокуса
+
+    # Завершаем обработку данных в листе даных о размерах узлов фокуса
+    # for iCountDown
 
     # результирующий вывод
     html = "<html><body><table cellpadding='5' cellspacing='1'>"
@@ -80,6 +85,7 @@ def junk_nav ( request, offsetPageNum ) :
             html += ">%03d</a></td>" % dim[CountX][CountY][0]
         html += "</tr>"
     html += "</table> Время выполнения: %f " % float(time.clock() - tStart)
+    html += "<br /> lstFocusInfo: %d, %s" % (  len(lstFocusInfo), lstFocusInfo )
     html += "</body></html>"
     # вывод
     return HttpResponse ( html )
