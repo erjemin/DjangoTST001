@@ -42,6 +42,7 @@ def junk_nav ( request, offsetPageNum ) :
     iNumNavFocus = random.randint (2, int ( iCountDown / 80. ) )   # число очагов навигации
     iMaxRadiusFocus = 12     # предельный разбег фокуса навигации
     iMinRadiusFocus = 5     # минимальный разбег фокуса навигации
+    iNumNavFocus = random.randint(2 , int (dimX * dimY / 120 ))   # число очагов навигации
     # инициализируем массив размерностью dimX на dimY и глубиной 2
     dim = [[[ 0 # countY * dimX + countX + 1
         for i in range(2)]
@@ -81,8 +82,8 @@ def junk_nav ( request, offsetPageNum ) :
         for CountX in range( dimX ) :
             html += "<td bgcolor='#"
             html += "99%02x99" % int((dim[CountX][CountY][0]*255.)/(dimX*dimY))
-            html += "'><a href='/nav/%03d/'" % dim[CountX][CountY][0]
-            html += ">%03d</a></td>" % dim[CountX][CountY][0]
+            html += "'><a href='/nav/%04d/'" % dim[CountX][CountY][0]
+            html += ">%04d</a></td>" % dim[CountX][CountY][0]
         html += "</tr>"
     html += "</table> Время выполнения: %f " % float(time.clock() - tStart)
     html += "<br /> lstFocusInfo: %d, %s" % (  len(lstFocusInfo), lstFocusInfo )
