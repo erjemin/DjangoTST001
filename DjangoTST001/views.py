@@ -36,6 +36,7 @@ def junk_nav ( request, offsetPageNum ) :
     except ValueError:
         raise Http404 ( )
     random.seed ( offsetPageNum )
+    html = "<html><body>"
     dimX = 30  # число столбцов навигационного массива
     dimY = 15  # число строк навигационного массива
     iCountDown = iTotalDim = dimX * dimY   # емкость создаваемого массива (после исползуется как впомогательная)
@@ -45,14 +46,14 @@ def junk_nav ( request, offsetPageNum ) :
     if iNumNavFocus > 6 :
         iNumNavFocus = 6
     # инициализируем массив размерностью dimX на dimY и глубиной 2
-    dim = [[[ 0 # countY * dimX + countX + 1
+    dim = [[[ 0 # iTmpY * dimX + countX + 1
         for i in range(2)]
-            for countY in range(dimY)]
-                for countX in range(dimX)]
+            for iTmpY in range(dimY)]
+                for iTmpX in range(dimX)]
 
     lstFocusInfo =  [[ 0       # создает вспомогательный лист с даными о рзмерах уздлв фокуса
         for i in range (2) ]
-            for countY in range( iNumNavFocus )]
+            for iTmpY in range( iNumNavFocus )]
 
     # начинаем заполнять навигационный массив
     for CountFocus in range ( iNumNavFocus ) :
@@ -66,48 +67,71 @@ def junk_nav ( request, offsetPageNum ) :
         for CountRadius in range (1, iRadiusFocus ) :
             iCurentFocusSquare = CountRadius * CountRadius
             for CountTmpFocus in range ( 1, iCurentFocusSquare*2 ) :
-                iTmp0X = random.randint(iCurentCenterFocusX-CountRadius,iCurentCenterFocusX+CountRadius)
-                iTmp0Y = random.randint(iCurentCenterFocusY-CountRadius,iCurentCenterFocusY+CountRadius)
-                if iTmp0Y < 0 or iTmp0X < 0 or iTmp0Y >= dimY or iTmp0X >= dimX:
+                iTmpX = random.randint(iCurentCenterFocusX-CountRadius,iCurentCenterFocusX+CountRadius)
+                iTmpY = random.randint(iCurentCenterFocusY-CountRadius,iCurentCenterFocusY+CountRadius)
+                if iTmpY < 0 or iTmpX < 0 or iTmpY >= dimY or iTmpX >= dimX:
                     continue
 
-                if dim[iTmp0X][iTmp0Y][0] == 0 :
-                    dim[iTmp0X][iTmp0Y][0] = iCountDown
-                    dim[iTmp0X][iTmp0Y][1] = CountFocus+1
+                if dim[iTmpX][iTmpY][0] == 0 :
+                    dim[iTmpX][iTmpY][0] = iCountDown
+                    dim[iTmpX][iTmpY][1] = CountFocus+1
                     iCountDown -= 1
         lstFocusInfo[CountFocus][0] = iCountDown # дописываем во вспомогательный лист промежуточный размер текущего узла фокуса
+    # Добиваем оставшееся пустое ролстранство белым шумом
+    # этот кусок кода можно изъять он все сильно замедляет
+    while iCountDown > 1 :
+        iTmpX = random.randint (0, dimX-1)
+        iTmpY = random.randint (0, dimY-1)
+        if dim[iTmpX][iTmpY][0] == 0 :
+            dim[iTmpX][iTmpY][0] = iCountDown
+            iCountDown -=1
+    # контрольный выстрел если всетаки еще остались незаполненный клетки
+    #if iCountDown > 1 :
+    #    html += "контрольный выстрел т.к. iCountDown = %d<br />" % iCountDown
+    #    for iTmpY in range( dimY ) :
+    #        for iTmpX in range( dimX ) :
+    #            if dim[iTmpX][iTmpY][0] == 0 :
+    #                dim[iTmpX][iTmpY][0] = iCountDown
+    #                iCountDown -= 1
+    #            if iCountDown < 0 : break
+    #        if iCountDown < 0 : break
+    if iCountDown > 1 :
+        html += "<h1>ERROR:: несколько нулевых клеток %d" % iCountDown
 
-    # Завершаем обработку данных в листе даных о размерах узлов фокуса
+
+
+# Завершаем обработку данных в листе даных о размерах узлов фокуса
     lstFocusInfo[0][1] = iTotalDim - lstFocusInfo[0][0] # дописываем во вспомогательный лист площадь текущего узла фокуса
-    for iCountDown in range ( 1, iNumNavFocus ) :
-        lstFocusInfo[iCountDown][1] = lstFocusInfo[iCountDown-1][0] - lstFocusInfo[iCountDown][0]
+    for i in range ( 1, iNumNavFocus ) :
+        lstFocusInfo[i][1] = lstFocusInfo[i-1][0] - lstFocusInfo[i][0]
 
     # результирующий вывод
-    html = "<html><body><table cellpadding='5' cellspacing='1'>"
-    for CountY in range( dimY ) :
+    html += "<table cellpadding='5' cellspacing='1'>"
+    for iTmpY in range( dimY ) :
         html += "<tr>"
-        for CountX in range( dimX ) :
-            if dim[CountX][CountY][1] == 0 :
-                html += "<td bgcolor='#808080'>"
-                html += "<a href='/nav/%04d/' style='color:#909090'>0000</a>" % dim[CountX][CountY][0]
-            elif dim[CountX][CountY][1] == 1 :
-                html += "<td bgcolor='#%02x0000'>" % int(0x9d+((dim[CountX][CountY][0]-lstFocusInfo[0][0])*98.)/lstFocusInfo[0][1])
-                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[CountX][CountY][0], dim[CountX][CountY][1])
-            elif dim[CountX][CountY][1] == 2 :
-                html += "<td bgcolor='#00%02x00'>" % int(0x9d+((dim[CountX][CountY][0]-lstFocusInfo[1][0])*98.)/lstFocusInfo[1][1])
-                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[CountX][CountY][0], dim[CountX][CountY][1])
-            elif dim[CountX][CountY][1] == 3 :
-                html += "<td bgcolor='#0000%02x'>" % int(0x9d+((dim[CountX][CountY][0]-lstFocusInfo[2][0])*98.)/lstFocusInfo[2][1])
-                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[CountX][CountY][0], dim[CountX][CountY][1])
-            elif dim[CountX][CountY][1] == 4 :
-                html += "<td bgcolor='#FF%02xFf'>" % int(0x9d-((dim[CountX][CountY][0]-lstFocusInfo[3][0])*98.)/lstFocusInfo[3][1])
-                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[CountX][CountY][0], dim[CountX][CountY][1])
-            elif dim[CountX][CountY][1] == 5 :
-                html += "<td bgcolor='#FFFF%02x'>" % int(0x9d-((dim[CountX][CountY][0]-lstFocusInfo[4][0])*98.)/lstFocusInfo[4][1])
-                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[CountX][CountY][0], dim[CountX][CountY][1])
-            elif dim[CountX][CountY][1] == 6 :
-                html += "<td bgcolor='#%02xFFFF'>" % int(0x9d-((dim[CountX][CountY][0]-lstFocusInfo[5][0])*98.)/lstFocusInfo[5][1])
-                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[CountX][CountY][0], dim[CountX][CountY][1])
+        for iTmpX in range( dimX ) :
+            if dim[iTmpX][iTmpY][1] == 0 :
+                i = 0x80 + random.randint(-16,16)
+                html += "<td bgcolor='#%02x%02x%02x'>" % ( i, i, i )
+                html += "<a href='/nav/%04d/' style='color:#909090'>%04d</a>" % (dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
+            elif dim[iTmpX][iTmpY][1] == 1 :
+                html += "<td bgcolor='#%02x0000'>" % int(0x9d+((dim[iTmpX][iTmpY][0]-lstFocusInfo[0][0])*98.)/lstFocusInfo[0][1])
+                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
+            elif dim[iTmpX][iTmpY][1] == 2 :
+                html += "<td bgcolor='#00%02x00'>" % int(0x9d+((dim[iTmpX][iTmpY][0]-lstFocusInfo[1][0])*98.)/lstFocusInfo[1][1])
+                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
+            elif dim[iTmpX][iTmpY][1] == 3 :
+                html += "<td bgcolor='#0000%02x'>" % int(0x9d+((dim[iTmpX][iTmpY][0]-lstFocusInfo[2][0])*98.)/lstFocusInfo[2][1])
+                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
+            elif dim[iTmpX][iTmpY][1] == 4 :
+                html += "<td bgcolor='#FF%02xFf'>" % int(0x9d-((dim[iTmpX][iTmpY][0]-lstFocusInfo[3][0])*98.)/lstFocusInfo[3][1])
+                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
+            elif dim[iTmpX][iTmpY][1] == 5 :
+                html += "<td bgcolor='#FFFF%02x'>" % int(0x9d-((dim[iTmpX][iTmpY][0]-lstFocusInfo[4][0])*98.)/lstFocusInfo[4][1])
+                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
+            elif dim[iTmpX][iTmpY][1] == 6 :
+                html += "<td bgcolor='#%02xe0e0'>" % int(0x9d-((dim[iTmpX][iTmpY][0]-lstFocusInfo[5][0])*98.)/lstFocusInfo[5][1])
+                html += "<a href='/nav/%04d/'>%04d</a>" % ( dim[iTmpX][iTmpY][0], dim[iTmpX][iTmpY][0])
             else :
                 html += "<td>err0"
             html += "</td>"
